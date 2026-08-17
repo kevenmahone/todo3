@@ -25,10 +25,12 @@ Option 1
 — Install i2pd every boot
 
 Boot Debian Live, then:
-sudo apt update
-sudo apt install i2pd
-sudo systemctl start i2pd
-It works, but:
-slower
-you repeat it every session
-requires internet access to download packages
+
+ sudo apt update
+ sudo apt install i2pd
+ sudo systemctl start i2pd
+ 
+ It works, but:
+ slower
+ you repeat it every session
+ requires internet access to download packages
