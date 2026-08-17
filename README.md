@@ -40,82 +40,154 @@ Boot Debian Live, then:
 
 
 
+DEBIAN + i2PD - CONFIGURATION SECURISEE
 
-For a secure Debian + i2pd setup, you want to harden both the OS and the I2P router configuration. Debian already has many security features, but you should reduce the attack surface. �
-wiki.debian.org +1
-1. Debian installation choices
-During install:
-Use minimal Debian install
-Enable full disk encryption (LUKS) if using a hard drive
-Do not install:
-SSH server (unless needed)
-printing services
-Bluetooth
-unnecessary desktop software
-Create a normal user; avoid daily root usage
-Debian security guidance recommends removing unnecessary services and keeping the system minimal. �
-debian.org
-2. Update Debian
-After installation:
+Objectif:
+Configurer un système Debian avec i2pd de manière plus sécurisée en réduisant les services inutiles, en activant un pare-feu, en renforçant le système et en limitant l'exposition du routeur I2P.
+
+==================================================
+
+1. INSTALLATION DE DEBIAN
+   ==================================================
+
+Pendant l'installation:
+
+- Utiliser une installation minimale de Debian.
+- Activer le chiffrement complet du disque avec LUKS si un disque est utilisé.
+- Ne pas installer les services inutiles:
+  - serveur SSH si non nécessaire
+  - Bluetooth
+  - impression
+  - logiciels inutiles
+
+Créer un utilisateur normal et éviter d'utiliser root pour les tâches quotidiennes.
+
+==================================================
+2. METTRE DEBIAN A JOUR
+
+Après l'installation:
+
 sudo apt update
+
 sudo apt full-upgrade
-Install security tools:
+
+Installer des outils de sécurité:
+
 sudo apt install unattended-upgrades apt-listchanges lynis fail2ban ufw apparmor
-Enable automatic security updates:
+
+Activer les mises à jour de sécurité automatiques:
+
 sudo dpkg-reconfigure unattended-upgrades
-3. Firewall (important for i2pd)
-Install UFW:
+
+==================================================
+3. CONFIGURATION DU PARE-FEU UFW
+
+Installer UFW:
+
 sudo apt install ufw
-Default deny:
+
+Bloquer par défaut:
+
 sudo ufw default deny incoming
+
 sudo ufw default deny outgoing
-Allow only what you need.
-Allow DNS + updates:
+
+Autoriser les connexions nécessaires:
+
+DNS:
+
 sudo ufw allow out 53
+
+Mises à jour:
+
 sudo ufw allow out 80
+
 sudo ufw allow out 443
-Allow I2P:
+
+I2P:
+
 sudo ufw allow out 4444
+
 sudo ufw allow out 4447
-Enable:
+
+Activer:
+
 sudo ufw enable
-4. Kernel hardening
-Edit:
+
+Vérifier:
+
+sudo ufw status
+
+==================================================
+4. RENFORCEMENT DU KERNEL LINUX
+
+Modifier:
+
 sudo nano /etc/sysctl.conf
-Add:
+
+Ajouter:
+
 kernel.kptr_restrict=2
+
 kernel.dmesg_restrict=1
+
 kernel.randomize_va_space=2
+
 kernel.sysrq=0
 
 net.ipv4.conf.all.accept_redirects=0
+
 net.ipv4.conf.default.accept_redirects=0
+
 net.ipv4.conf.all.accept_source_route=0
+
 net.ipv4.icmp_echo_ignore_broadcasts=1
 
 fs.suid_dumpable=0
-Apply:
+
+Appliquer:
+
 sudo sysctl -p
-5. Enable AppArmor
-Check:
+
+==================================================
+5. ACTIVER APPARMOR
+
+Vérifier:
+
 sudo aa-status
-Enable:
+
+Activer:
+
 sudo systemctl enable apparmor
+
 sudo systemctl start apparmor
-6. Install i2pd
+
+==================================================
+6. INSTALLER i2pd
+
+Installer:
+
 sudo apt install i2pd
-The Debian i2pd package uses configuration files in:
+
+Les fichiers de configuration sont dans:
+
 /etc/i2pd/
-including:
+
+Fichiers importants:
+
 i2pd.conf
+
 tunnels.conf
 
+==================================================
+7. CONFIGURATION SECURISEE DE i2pd
 
-wiki.debian.org
-7. Secure i2pd configuration
-Edit:
+Modifier:
+
 sudo nano /etc/i2pd/i2pd.conf
-Recommended:
+
+Configuration recommandée:
+
 ipv6=false
 
 bandwidth=B
@@ -124,55 +196,146 @@ notransit=true
 
 floodfill=false
 
+Activer uniquement le proxy HTTP local:
+
 httpproxy.enabled=true
+
 httpproxy.address=127.0.0.1
+
 httpproxy.port=4444
 
+Désactiver SOCKS si inutile:
+
 socksproxy.enabled=false
-Why:
-Disable IPv6
-Reduces possible leaks:
+
+Explication:
+
 ipv6=false
-Disable transit traffic
-Your node will not relay traffic for others:
+
+- réduit les risques liés aux fuites IPv6.
+
 notransit=true
-Disable floodfill
-Do not become a network directory node:
+
+- empêche votre machine de servir de relais pour d'autres utilisateurs I2P.
+
 floodfill=false
-8. Limit i2pd permissions
-Check service:
-systemctl status i2pd
-Enable:
+
+- empêche votre nœud de devenir un serveur d'annuaire I2P.
+
+==================================================
+8. ACTIVER LE SERVICE i2pd
+
+Démarrer automatiquement:
+
 sudo systemctl enable i2pd
-Restart:
+
+Redémarrer:
+
 sudo systemctl restart i2pd
-9. Browser configuration
-For I2P browsing:
-Use a separate browser profile.
-Proxy:
-HTTP proxy:
+
+Vérifier:
+
+systemctl status i2pd
+
+==================================================
+9. CONFIGURATION DU NAVIGATEUR
+
+Utiliser un profil Firefox séparé pour I2P.
+
+Configurer le proxy:
+
+HTTP Proxy:
+
 127.0.0.1
+
 Port:
+
 4444
-Do NOT use normal Firefox profile with personal accounts.
-Avoid:
-Google login
-Facebook login
-personal email
-downloading unknown files
-10. Extra isolation (stronger)
-Run i2pd inside a container:
-Options:
-systemd sandboxing
-Firejail
-Podman container
-Example:
+
+Éviter:
+
+- comptes personnels
+- Google
+- Facebook
+- email personnel
+- téléchargement de fichiers inconnus
+
+Ne pas mélanger navigation normale et navigation I2P.
+
+==================================================
+10. ISOLATION SUPPLEMENTAIRE
+
+Installer Firejail:
+
 sudo apt install firejail
-11. Check your security
-Run:
+
+Possibilités:
+
+- lancer le navigateur dans Firejail
+- isoler i2pd
+- utiliser un conteneur Podman
+
+==================================================
+11. AUDIT DE SECURITE
+
+Lancer:
+
 sudo lynis audit system
-Look for:
-open ports
-weak permissions
-missing updates
-Debian documents hardening approaches and security auditing tools. 
+
+Vérifier:
+
+- ports ouverts
+- permissions
+- services actifs
+- mises à jour manquantes
+
+==================================================
+12. ARCHITECTURE RECOMMANDEE
+
+Internet
+
+|
+
+Routeur pare-feu
+
+|
+
+Debian minimal sécurisé
+
+|
+
+i2pd
+
+|
+
+Firefox avec profil I2P
+
+Version plus forte:
+
+Debian Live
+
++ 
+
+i2pd
+
++ 
+
+pas de persistence
+
++ 
+
+DVD-R ou média en lecture seule
+
++ 
+
+pas de WiFi
+
++ 
+
+pas de Bluetooth
+
++ 
+
+pare-feu externe
+
+Cette configuration réduit la surface d'attaque et limite les risques, mais aucun système connecté à Internet ne peut garantir une sécurité parfaite.
