@@ -1,5 +1,8 @@
 install i2p on a debian live dvd r like tails ...
 
+https://github.com/evilsocket/opensnitch?utm_source=chatgpt.com
+
+you can install open snitch on debian
 
 
 
